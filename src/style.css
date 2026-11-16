@@ -8,9 +8,10 @@
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
   font-weight: 400;
-  --green: #355a43;
-  --green-dark: #284735;
-  --muted: #767a70;
+  --green: #18366b;
+  --green-dark: #102650;
+  --muted: #667085;
+  --gold: #bd9638;
   --serif: 'DM Serif Display', Georgia, serif;
 }
 
@@ -59,12 +60,24 @@ textarea {
 
 .brand-logo {
   display: block;
-  width: 88px;
-  height: 72px;
+  width: 100%;
+  height: 100%;
   flex: 0 0 auto;
   object-fit: contain;
   object-position: center;
-  filter: drop-shadow(0 2px 3px rgba(34, 41, 28, 0.18));
+  transform: scale(2.2);
+}
+
+.brand-logo-frame {
+  display: block;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  overflow: hidden;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  background: #182b5c;
+  box-shadow: 0 2px 7px rgba(16, 38, 80, 0.22);
 }
 
 .brand-name,
@@ -239,6 +252,21 @@ h2 {
   color: #63765b;
   font-family: var(--serif);
   font-size: 20px;
+}
+
+.answer-date {
+  display: grid;
+  gap: 4px;
+  margin: -15px 0 23px;
+  color: #777a71;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.answer-date time {
+  color: #496447;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 form label {
@@ -586,6 +614,24 @@ textarea::placeholder {
   box-shadow: 0 0 0 3px rgba(111, 135, 101, 0.12);
 }
 
+.admin-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e8e7df;
+  border-radius: 2px;
+  outline: none;
+  background: #fffefa;
+  color: #343a33;
+  font: inherit;
+  font-size: 13px;
+}
+
+.admin-form select:focus {
+  border-color: #87977b;
+  box-shadow: 0 0 0 3px rgba(111, 135, 101, 0.12);
+}
+
 .admin-form button,
 .secondary-button {
   min-height: 42px;
@@ -833,11 +879,213 @@ textarea::placeholder {
     letter-spacing: 1.35px;
   }
 
-  .brand-logo {
-    width: 78px;
-    height: 62px;
+  .brand-logo-frame {
+    width: 64px;
+    height: 64px;
+    flex-basis: 64px;
+  }
+}
+
+:root {
+    color: #263248;
+    background: #fff;
+    --green: #18366b;
+    --green-dark: #102650;
+    --gold: #bd9638;
   }
 
+body {
+  background:
+    radial-gradient(ellipse at 12% 46%, rgba(216, 226, 245, 0.42), transparent 36%),
+    #fff;
+}
+
+  .topbar,
+  .footer {
+    border-color: #e5e9f1;
+  }
+
+  .brand,
+  .brand-name,
+  .admin-back-link,
+  .footer a {
+    color: #18366b;
+  }
+
+  .session-label,
+  .intro,
+  .promise p,
+  .form-message,
+  .admin-intro,
+  .guide-question-help {
+    color: #667085;
+  }
+
+  .live-dot {
+    background: #bd9638;
+    box-shadow: 0 0 0 3px #f7f1df;
+  }
+
+  .eyebrow,
+  .eyebrow-line,
+  .card-kicker,
+  .card-note span,
+  .footer-right span {
+    color: #a27b22;
+  }
+
+  .eyebrow-line {
+    background: #bd9638;
+  }
+
+  h1,
+  h2,
+  .admin-panel h2,
+  .admin-dashboard-heading h2,
+  .success-panel h3 {
+    color: #18366b;
+  }
+
+  h1 em {
+    color: #bd9638;
+  }
+
+  .promise-icon,
+  .question-mark,
+  .success-icon {
+    border-color: #e3e9f5;
+    background: #edf2fb;
+    color: #24477f;
+  }
+
+  .promise strong,
+  .answer-date time,
+  .anonymous-note,
+  .text-button,
+  .admin-message:not(.is-error),
+  .question-topic,
+  .status-badge,
+  .secondary-button {
+    color: #24477f;
+  }
+
+  .question-card,
+  .admin-panel,
+  .admin-question-card {
+    border-color: #e3e8f1;
+    background: #fff;
+    box-shadow: 0 18px 55px rgba(24, 54, 107, 0.07);
+  }
+
+  .question-card h2 {
+    color: #18366b;
+  }
+
+  .card-note {
+    border-color: #edf0f5;
+    color: #667085;
+  }
+
+  form label,
+  .admin-form label {
+    color: #34425c;
+  }
+
+  .select-wrap select,
+  textarea,
+  .admin-form input,
+  .admin-form select,
+  .status-select {
+    border-color: #dce3ee;
+    background: #fff;
+    color: #34425c;
+  }
+
+  .select-wrap select:focus,
+  textarea:focus,
+  .admin-form input:focus,
+  .admin-form select:focus {
+    border-color: #6b83b2;
+    box-shadow: 0 0 0 3px rgba(36, 71, 127, 0.12);
+  }
+
+  .select-wrap svg,
+  .optional,
+  .char-count,
+  .admin-question-meta,
+  .status-control-label {
+    color: #778197;
+  }
+
+  #submit-button:focus-visible,
+  .text-button:focus-visible {
+    outline-color: #d2b45e;
+  }
+
+  .config-notice {
+    border-color: #e8d8a9;
+    background: #fbf7e9;
+    color: #765a22;
+  }
+
+  .success-panel .success-icon {
+    background: #edf2fb;
+    color: #24477f;
+  }
+
+  .footer {
+    color: #778197;
+  }
+
+  .footer a:hover,
+  .admin-back-link:hover {
+    color: #102650;
+  }
+
+  .secondary-button {
+    border-color: #d5deed;
+    background: #fff;
+  }
+
+  .secondary-button:hover {
+    background: #edf2fb;
+  }
+
+  .guide-question-panel {
+    border-color: #dce4f1;
+    background: #f2f5fb;
+  }
+
+  .source-badge {
+    background: #eef1f6;
+    color: #667085;
+  }
+
+  .source-guide {
+    background: #f7f1df;
+    color: #80621d;
+  }
+
+  .status-badge {
+    background: #edf2fb;
+  }
+
+  .status-answered {
+    background: #f7f1df;
+    color: #80621d;
+  }
+
+  .status-archived {
+    background: #eef1f6;
+    color: #667085;
+  }
+
+  .admin-question-actions,
+  .card-note {
+    border-color: #edf0f5;
+  }
+
+@media (max-width: 520px) {
   .session-label {
     font-size: 8px;
   }

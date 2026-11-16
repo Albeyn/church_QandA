@@ -14,7 +14,7 @@ document.querySelector('#app').innerHTML = `
   <main class="page-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Manifested Word Bride Assembly home">
-        <img class="brand-logo" src="${churchLogo}" alt="" />
+        <span class="brand-logo-frame"><img class="brand-logo" src="${churchLogo}" alt="" /></span>
         <span class="brand-name">Manifested Word<br />Bride Assembly</span>
       </a>
       <span class="session-label"><span class="live-dot"></span> CHURCH Q&amp;A</span>
@@ -47,6 +47,11 @@ document.querySelector('#app').innerHTML = `
           </div>
           <span class="question-mark" aria-hidden="true">?</span>
         </div>
+        <div id="answer-date" class="answer-date" hidden>
+          <span>Questions will be answered at church on</span>
+          <time></time>
+        </div>
+        <p id="public-settings-message" class="form-message" aria-live="polite"></p>
 
         <div id="config-notice" class="config-notice" ${isConfigured ? 'hidden' : ''} role="status">
           Supabase isn’t connected yet. Add your project URL and anon key to
@@ -179,6 +184,43 @@ document.querySelector('#ask-another').addEventListener('click', () => {
   form.hidden = false;
   questionInput.focus();
 });
+
+loadPublicSettings();
+}
+
+async function loadPublicSettings() {
+  if (!supabase) return;
+
+  const message = document.querySelector('#public-settings-message');
+  try {
+    const { data, error } = await supabase
+      .from('qna_settings')
+      .select('id, guide_question, answer_date')
+      .eq('id', true)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error('Public Q&A settings are not configured.');
+
+    document.querySelector('#form-title').textContent = data.guide_question;
+    const answerDate = document.querySelector('#answer-date');
+    if (data.answer_date) {
+      const time = answerDate.querySelector('time');
+      time.dateTime = data.answer_date;
+      time.textContent = new Date(`${data.answer_date}T00:00:00Z`).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'UTC',
+      });
+      answerDate.hidden = false;
+    } else {
+      answerDate.hidden = true;
+    }
+  } catch (error) {
+    console.error('Loading public Q&A settings failed:', error);
+    message.textContent = 'Could not load the current Q&A details.';
+    message.classList.add('is-error');
+  }
 }
 
 function renderAdmin() {
@@ -186,7 +228,7 @@ function renderAdmin() {
     <main class="page-shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="Manifested Word Bride Assembly home">
-          <img class="brand-logo" src="${churchLogo}" alt="" />
+          <span class="brand-logo-frame"><img class="brand-logo" src="${churchLogo}" alt="" /></span>
           <span class="brand-name">Manifested Word<br />Bride Assembly</span>
         </a>
         <a class="admin-back-link" href="/">← Public Q&amp;A</a>
@@ -229,6 +271,19 @@ function renderAdmin() {
             <button id="admin-signout" class="secondary-button" type="button">Sign out</button>
           </div>
           <section class="guide-question-panel" aria-labelledby="guide-question-title">
+            <p class="card-kicker">PUBLIC PAGE</p>
+            <h2 id="qna-settings-title">Public Q&amp;A details</h2>
+            <p class="guide-question-help">Choose the question heading and the date your church will answer questions. These details appear on the public page.</p>
+            <form id="qna-settings-form" class="admin-form">
+              <label for="qna-guide-question">Public question heading</label>
+              <input id="qna-guide-question" name="guide_question" type="text" minlength="8" maxlength="120" required />
+              <label for="qna-answer-date">Answer date</label>
+              <input id="qna-answer-date" name="answer_date" type="date" />
+              <button id="qna-settings-button" type="submit">Save public details</button>
+              <p id="qna-settings-message" class="admin-message" aria-live="polite"></p>
+            </form>
+          </section>
+          <section class="guide-question-panel" aria-labelledby="guide-question-title">
             <p class="card-kicker">ADMIN-ADDED</p>
             <h2 id="guide-question-title">Add a guide question</h2>
             <p class="guide-question-help">Add a question to help guide your church Q&amp;A discussion.</p>
@@ -266,8 +321,50 @@ function renderAdmin() {
   const loginMessage = document.querySelector('#admin-login-message');
   const dashboardMessage = document.querySelector('#admin-dashboard-message');
   const questionList = document.querySelector('#question-list');
+  const qnaSettingsForm = document.querySelector('#qna-settings-form');
+  const qnaSettingsMessage = document.querySelector('#qna-settings-message');
   const guideQuestionForm = document.querySelector('#guide-question-form');
   const guideQuestionMessage = document.querySelector('#guide-question-message');
+
+  qnaSettingsForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    qnaSettingsMessage.textContent = '';
+    qnaSettingsMessage.classList.remove('is-error');
+    const formData = new FormData(qnaSettingsForm);
+    const guideQuestion = formData.get('guide_question').trim();
+    const answerDate = formData.get('answer_date');
+    const button = document.querySelector('#qna-settings-button');
+
+    if (guideQuestion.length < 8) {
+      qnaSettingsMessage.textContent = 'Please enter a public question heading with at least 8 characters.';
+      qnaSettingsMessage.classList.add('is-error');
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Saving…';
+    try {
+      const { data, error } = await supabase
+        .from('qna_settings')
+        .update({
+          guide_question: guideQuestion,
+          answer_date: answerDate || null,
+        })
+        .eq('id', true)
+        .select('guide_question')
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('No Q&A settings row was updated.');
+      qnaSettingsMessage.textContent = 'Public Q&A details saved.';
+    } catch (error) {
+      console.error('Saving public Q&A settings failed:', error);
+      qnaSettingsMessage.textContent = 'Could not save the public Q&A details. Please try again.';
+      qnaSettingsMessage.classList.add('is-error');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Save public details';
+    }
+  });
 
   guideQuestionForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -369,12 +466,33 @@ function renderAdmin() {
       }
 
       dashboard.hidden = false;
-      await loadQuestions();
+      await Promise.all([loadQuestions(), loadQnaSettings()]);
     } catch (error) {
       console.error('Admin authorization check failed:', error);
       loginPanel.hidden = false;
       loginMessage.textContent = 'Could not verify admin access. Check the Supabase setup.';
       loginMessage.classList.add('is-error');
+    }
+  }
+
+  async function loadQnaSettings() {
+    qnaSettingsMessage.textContent = 'Loading public Q&A details…';
+    qnaSettingsMessage.classList.remove('is-error');
+    try {
+      const { data, error } = await supabase
+        .from('qna_settings')
+        .select('id, guide_question, answer_date')
+        .eq('id', true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('Public Q&A settings are not configured.');
+      qnaSettingsForm.elements.guide_question.value = data.guide_question;
+      qnaSettingsForm.elements.answer_date.value = data.answer_date || '';
+      qnaSettingsMessage.textContent = '';
+    } catch (error) {
+      console.error('Loading admin Q&A settings failed:', error);
+      qnaSettingsMessage.textContent = 'Could not load public Q&A details. Check your Supabase setup.';
+      qnaSettingsMessage.classList.add('is-error');
     }
   }
 

@@ -46,13 +46,17 @@ users listed in `admin_users` can read questions or update their status.
    stored alongside submissions with a **Guide question** label, so they are easy
    to tell apart and remain private to approved admins.
 
+   Admins can also update the public question heading and the date the church
+   will answer questions. The answer date is optional; when set, it appears on
+   the public question page.
+
    To remove admin access, delete that user's row from `public.admin_users` in the
    Supabase SQL Editor. Do not grant admin access by putting a service-role key in
    the website.
 
    If you already ran an earlier version of the schema, run the updated
    [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor to add
-   the guide-question support and its access policies.
+   the guide-question and public Q&A settings support and their access policies.
 
 ## Deploy
 
