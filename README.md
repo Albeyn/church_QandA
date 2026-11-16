@@ -15,8 +15,9 @@ on the public page.
 
 The Supabase URL and anon/publishable key are intended for browser use. Never
 put a Supabase `service_role` key in this app or in a `VITE_` environment
-variable. Row-level security permits anonymous inserts, but only authenticated
-users listed in `admin_users` can read questions or update their status.
+variable. Row-level security permits anonymous question submissions from both
+signed-out and signed-in sessions, but only authenticated users listed in
+`admin_users` can read questions or update their status.
 
 ## Set up the admin
 

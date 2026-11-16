@@ -44,7 +44,7 @@ revoke all on table public.questions from anon, authenticated;
 revoke all on table public.admin_users from anon, authenticated;
 revoke all on table public.qna_settings from anon, authenticated;
 
-grant insert (question, topic) on public.questions to anon;
+grant insert (question, topic) on public.questions to anon, authenticated;
 grant select (id, question, topic, source, status, created_at) on public.questions to authenticated;
 grant insert (question, topic, source) on public.questions to authenticated;
 grant update (status) on public.questions to authenticated;
@@ -56,7 +56,7 @@ drop policy if exists "Anyone can submit a pending question" on public.questions
 create policy "Anyone can submit a pending question"
   on public.questions
   for insert
-  to anon
+  to anon, authenticated
   with check (status = 'pending' and source = 'anonymous');
 
 drop policy if exists "Admins can add guide questions" on public.questions;

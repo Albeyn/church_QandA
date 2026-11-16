@@ -180,6 +180,8 @@ document.querySelector('#ask-another').addEventListener('click', () => {
   form.reset();
   charCount.textContent = '0 / 1000';
   message.textContent = '';
+  submitButton.disabled = false;
+  buttonLabel.textContent = 'Send your question';
   successPanel.hidden = true;
   form.hidden = false;
   questionInput.focus();
