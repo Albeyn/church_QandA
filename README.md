@@ -64,6 +64,11 @@ signed-out and signed-in sessions, but only authenticated users listed in
    the guide-question and public Q&A settings support, dashboard stats function,
    and their access policies.
 
+   If the public page shows “Community question totals are temporarily unavailable,”
+   run [`supabase/public_stats_patch.sql`](supabase/public_stats_patch.sql) once in
+   the SQL Editor. That installs the stats function and the anonymous count access
+   the public page needs.
+
 ## Deploy
 
 ### Netlify

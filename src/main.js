@@ -254,18 +254,51 @@ async function loadPublicStats() {
 
   const message = document.querySelector('#public-stats-message');
   try {
-    const { data, error } = await supabase.rpc('get_public_question_stats');
-    if (error) throw error;
-    if (!data || !data.length) throw new Error('Public question stats are unavailable.');
-
+    const stats = await fetchPublicQuestionStats();
     document.querySelector('#public-submitted-count').textContent =
-      Number(data[0].submitted).toLocaleString();
+      stats.submitted.toLocaleString();
     document.querySelector('#public-answered-count').textContent =
-      Number(data[0].answered).toLocaleString();
+      stats.answered.toLocaleString();
+    message.textContent = '';
   } catch (error) {
     console.error('Loading public question stats failed:', error);
     message.textContent = 'Community question totals are temporarily unavailable.';
   }
+}
+
+async function fetchPublicQuestionStats() {
+  const { data, error } = await supabase.rpc('get_public_question_stats');
+  if (!error) {
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row && row.submitted != null && row.answered != null) {
+      return {
+        submitted: Number(row.submitted),
+        answered: Number(row.answered),
+      };
+    }
+  }
+
+  // Fallback for projects that have not installed the RPC yet: count only
+  // source/status columns (no question text) when anon SELECT is granted.
+  const [submittedRes, answeredRes] = await Promise.all([
+    supabase
+      .from('questions')
+      .select('source', { count: 'exact', head: true })
+      .eq('source', 'anonymous'),
+    supabase
+      .from('questions')
+      .select('source', { count: 'exact', head: true })
+      .eq('source', 'anonymous')
+      .eq('status', 'answered'),
+  ]);
+
+  if (submittedRes.error) throw submittedRes.error;
+  if (answeredRes.error) throw answeredRes.error;
+
+  return {
+    submitted: Number(submittedRes.count ?? 0),
+    answered: Number(answeredRes.count ?? 0),
+  };
 }
 
 function renderAdmin() {
