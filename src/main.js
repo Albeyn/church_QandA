@@ -628,9 +628,9 @@ function renderAdmin() {
       dashboardMessage.textContent = data.length
         ? `${data.length} question${data.length === 1 ? '' : 's'}`
         : 'No questions yet.';
-      for (const question of data) {
-        questionList.append(createQuestionCard(question));
-      }
+      data.forEach((question, index) => {
+        questionList.append(createQuestionCard(question, data, index));
+      });
     } catch (error) {
       console.error('Loading questions failed:', error);
       dashboardMessage.textContent = 'Could not load questions. Check your admin access and Supabase policies.';
@@ -638,7 +638,7 @@ function renderAdmin() {
     }
   }
 
-  function createQuestionCard(question) {
+  function createQuestionCard(question, questions, index) {
     const card = document.createElement('article');
     card.className = 'admin-question-card';
 
@@ -664,6 +664,12 @@ function renderAdmin() {
 
     const actions = document.createElement('div');
     actions.className = 'admin-question-actions';
+    const presentButton = document.createElement('button');
+    presentButton.className = 'secondary-button present-button';
+    presentButton.type = 'button';
+    presentButton.textContent = 'Present';
+    presentButton.setAttribute('aria-label', `Present question: ${question.question}`);
+    presentButton.addEventListener('click', () => presentQuestion(questions, index, presentButton));
     const status = document.createElement('span');
     status.className = `status-badge status-${question.status}`;
     status.textContent = question.status;
@@ -700,9 +706,191 @@ function renderAdmin() {
         statusSelect.disabled = false;
       }
     });
-    actions.append(status, statusLabel, statusSelect);
+    actions.append(presentButton, status, statusLabel, statusSelect);
     card.append(metadata, text, actions);
     return card;
+  }
+
+  function presentQuestion(questions, startIndex, trigger) {
+    let currentIndex = startIndex;
+    const presentation = document.createElement('section');
+    presentation.className = 'question-presentation';
+    presentation.setAttribute('role', 'dialog');
+    presentation.setAttribute('aria-modal', 'true');
+    presentation.setAttribute('aria-label', 'Question presentation');
+    presentation.tabIndex = -1;
+
+    const header = document.createElement('header');
+    header.className = 'presentation-header';
+    const brand = document.createElement('div');
+    brand.className = 'presentation-brand';
+    const logo = document.createElement('img');
+    logo.className = 'presentation-logo';
+    logo.src = churchLogo;
+    logo.alt = 'Manifested Word Bride Assembly';
+    const churchName = document.createElement('span');
+    churchName.textContent = 'Manifested Word Bride Assembly';
+    brand.append(logo, churchName);
+
+    const closeButton = document.createElement('button');
+    closeButton.className = 'presentation-close';
+    closeButton.type = 'button';
+    closeButton.textContent = 'Exit presentation';
+    closeButton.addEventListener('click', () => closePresentation());
+    header.append(brand, closeButton);
+
+    const content = document.createElement('div');
+    content.className = 'presentation-content';
+    const topic = document.createElement('p');
+    topic.className = 'presentation-topic';
+    const text = document.createElement('h1');
+    text.className = 'presentation-question';
+    content.append(topic, text);
+
+    const controls = document.createElement('div');
+    controls.className = 'presentation-controls';
+    const counter = document.createElement('p');
+    counter.className = 'presentation-count';
+    counter.setAttribute('aria-live', 'polite');
+    const navigation = document.createElement('div');
+    navigation.className = 'presentation-navigation';
+    const previousButton = document.createElement('button');
+    previousButton.className = 'presentation-previous';
+    previousButton.type = 'button';
+    previousButton.textContent = 'Previous question';
+    previousButton.addEventListener('click', showPreviousQuestion);
+    const nextButton = document.createElement('button');
+    nextButton.className = 'presentation-next';
+    nextButton.type = 'button';
+    nextButton.textContent = 'Next question';
+    nextButton.addEventListener('click', showNextQuestion);
+    navigation.append(previousButton, nextButton);
+    controls.append(counter, navigation);
+
+    const fullscreenNote = document.createElement('p');
+    fullscreenNote.className = 'presentation-note';
+    fullscreenNote.setAttribute('role', 'status');
+    presentation.append(header, content, controls, fullscreenNote);
+    document.body.append(presentation);
+
+    function updatePresentationQuestion() {
+      const question = questions[currentIndex];
+      topic.textContent = question.topic;
+      text.textContent = question.question;
+      counter.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+      previousButton.disabled = currentIndex === 0;
+      nextButton.disabled = currentIndex === questions.length - 1;
+      fitPresentationQuestion();
+    }
+
+    function fitPresentationQuestion() {
+      if (!presentation.isConnected) return;
+
+      text.style.fontSize = '';
+      const maxFontSize = Number.parseFloat(getComputedStyle(text).fontSize);
+      const contentStyles = getComputedStyle(content);
+      const topicStyles = getComputedStyle(topic);
+      const availableHeight = Math.max(
+        0,
+        content.clientHeight
+          - topic.offsetHeight
+          - Number.parseFloat(topicStyles.marginBottom)
+          - Number.parseFloat(contentStyles.paddingTop)
+          - Number.parseFloat(contentStyles.paddingBottom),
+      );
+      const fits = (fontSize) => {
+        text.style.fontSize = `${fontSize}px`;
+        return text.scrollHeight <= availableHeight && text.scrollWidth <= text.clientWidth;
+      };
+
+      let low = 8;
+      let high = maxFontSize;
+      let bestFit = low;
+      for (let attempt = 0; attempt < 12 && high - low > 0.5; attempt += 1) {
+        const fontSize = (low + high) / 2;
+        if (fits(fontSize)) {
+          bestFit = fontSize;
+          low = fontSize;
+        } else {
+          high = fontSize;
+        }
+      }
+      text.style.fontSize = `${bestFit}px`;
+    }
+
+    function showNextQuestion() {
+      if (currentIndex >= questions.length - 1) return;
+      currentIndex += 1;
+      updatePresentationQuestion();
+    }
+
+    function showPreviousQuestion() {
+      if (currentIndex === 0) return;
+      currentIndex -= 1;
+      updatePresentationQuestion();
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    let enteredFullscreen = false;
+    let closing = false;
+
+    async function closePresentation(exitFullscreen = true) {
+      if (closing) return;
+      closing = true;
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      window.removeEventListener('resize', fitPresentationQuestion);
+      if (exitFullscreen && document.fullscreenElement === presentation) {
+        try {
+          await document.exitFullscreen();
+        } catch (error) {
+          console.error('Exiting question presentation failed:', error);
+        }
+      }
+      presentation.remove();
+      document.body.style.overflow = previousBodyOverflow;
+      trigger.focus();
+    }
+
+    function onKeyDown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closePresentation();
+      } else if (event.key === 'ArrowRight' && currentIndex < questions.length - 1) {
+        event.preventDefault();
+        showNextQuestion();
+      } else if (event.key === 'ArrowLeft' && currentIndex > 0) {
+        event.preventDefault();
+        showPreviousQuestion();
+      }
+    }
+
+    function onFullscreenChange() {
+      if (enteredFullscreen && document.fullscreenElement !== presentation) {
+        closePresentation(false);
+      } else {
+        fitPresentationQuestion();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    window.addEventListener('resize', fitPresentationQuestion);
+    updatePresentationQuestion();
+    document.fonts.ready.then(fitPresentationQuestion);
+    closeButton.focus();
+
+    if (typeof presentation.requestFullscreen === 'function') {
+      presentation.requestFullscreen().then(() => {
+        enteredFullscreen = document.fullscreenElement === presentation;
+      }).catch((error) => {
+        console.error('Entering question presentation fullscreen failed:', error);
+        fullscreenNote.textContent = 'Browser fullscreen is unavailable. The question remains in presentation view.';
+      });
+    } else {
+      fullscreenNote.textContent = 'Browser fullscreen is unavailable. The question remains in presentation view.';
+    }
   }
 
   async function restoreSession() {
