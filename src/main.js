@@ -20,6 +20,28 @@ document.querySelector('#app').innerHTML = `
       <span class="session-label"><span class="live-dot"></span> CHURCH Q&amp;A</span>
     </header>
 
+    <section class="community-dashboard" aria-labelledby="community-dashboard-title">
+      <div class="admin-dashboard-heading">
+        <div>
+          <p class="card-kicker">COMMUNITY DASHBOARD</p>
+          <h2 id="community-dashboard-title">Question totals</h2>
+        </div>
+        <p id="public-stats-message" class="community-stats-message" aria-live="polite"></p>
+      </div>
+      <div class="stats-grid admin-stats" aria-label="Community question totals">
+        <article class="stat-card">
+          <span class="stat-label">Questions submitted</span>
+          <strong id="public-submitted-count" class="stat-value" aria-live="polite">—</strong>
+          <span class="stat-help">Anonymous questions from our community</span>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Questions answered</span>
+          <strong id="public-answered-count" class="stat-value" aria-live="polite">—</strong>
+          <span class="stat-help">Questions marked answered by the church</span>
+        </article>
+      </div>
+    </section>
+
     <section class="hero" aria-labelledby="page-title">
       <div class="hero-copy">
         <p class="eyebrow"><span class="eyebrow-line"></span> A SPACE FOR HONEST QUESTIONS</p>
@@ -174,6 +196,7 @@ form.addEventListener('submit', async (event) => {
 
   form.hidden = true;
   successPanel.hidden = false;
+  await loadPublicStats();
 });
 
 document.querySelector('#ask-another').addEventListener('click', () => {
@@ -188,6 +211,7 @@ document.querySelector('#ask-another').addEventListener('click', () => {
 });
 
 loadPublicSettings();
+loadPublicStats();
 }
 
 async function loadPublicSettings() {
@@ -222,6 +246,25 @@ async function loadPublicSettings() {
     console.error('Loading public Q&A settings failed:', error);
     message.textContent = 'Could not load the current Q&A details.';
     message.classList.add('is-error');
+  }
+}
+
+async function loadPublicStats() {
+  if (!supabase) return;
+
+  const message = document.querySelector('#public-stats-message');
+  try {
+    const { data, error } = await supabase.rpc('get_public_question_stats');
+    if (error) throw error;
+    if (!data || !data.length) throw new Error('Public question stats are unavailable.');
+
+    document.querySelector('#public-submitted-count').textContent =
+      Number(data[0].submitted).toLocaleString();
+    document.querySelector('#public-answered-count').textContent =
+      Number(data[0].answered).toLocaleString();
+  } catch (error) {
+    console.error('Loading public question stats failed:', error);
+    message.textContent = 'Community question totals are temporarily unavailable.';
   }
 }
 
@@ -272,6 +315,33 @@ function renderAdmin() {
             </div>
             <button id="admin-signout" class="secondary-button" type="button">Sign out</button>
           </div>
+          <section class="stats-grid admin-stats" aria-label="Question totals">
+            <article class="stat-card">
+              <span class="stat-label">Submissions</span>
+              <strong id="admin-submitted-count" class="stat-value">—</strong>
+              <span class="stat-help">Anonymous questions received</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Awaiting review</span>
+              <strong id="admin-pending-count" class="stat-value">—</strong>
+              <span class="stat-help">Submissions marked pending</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Reviewed</span>
+              <strong id="admin-reviewed-count" class="stat-value">—</strong>
+              <span class="stat-help">Submissions reviewed</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Answered</span>
+              <strong id="admin-answered-count" class="stat-value">—</strong>
+              <span class="stat-help">Submissions marked answered</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Guide questions</span>
+              <strong id="admin-guide-count" class="stat-value">—</strong>
+              <span class="stat-help">Added by an admin</span>
+            </article>
+          </section>
           <section class="guide-question-panel" aria-labelledby="guide-question-title">
             <p class="card-kicker">PUBLIC PAGE</p>
             <h2 id="qna-settings-title">Public Q&amp;A details</h2>
@@ -509,6 +579,18 @@ function renderAdmin() {
         .select('id, question, topic, source, status, created_at')
         .order('created_at', { ascending: false });
       if (error) throw error;
+
+      const submissions = data.filter((question) => question.source === 'anonymous');
+      document.querySelector('#admin-submitted-count').textContent =
+        submissions.length.toLocaleString();
+      document.querySelector('#admin-pending-count').textContent =
+        submissions.filter((question) => question.status === 'pending').length.toLocaleString();
+      document.querySelector('#admin-reviewed-count').textContent =
+        submissions.filter((question) => question.status === 'reviewed').length.toLocaleString();
+      document.querySelector('#admin-answered-count').textContent =
+        submissions.filter((question) => question.status === 'answered').length.toLocaleString();
+      document.querySelector('#admin-guide-count').textContent =
+        data.filter((question) => question.source === 'guide').length.toLocaleString();
 
       dashboardMessage.textContent = data.length
         ? `${data.length} question${data.length === 1 ? '' : 's'}`

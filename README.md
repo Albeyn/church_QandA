@@ -51,13 +51,18 @@ signed-out and signed-in sessions, but only authenticated users listed in
    will answer questions. The answer date is optional; when set, it appears on
    the public question page.
 
+   The admin dashboard shows submission and status totals. The public page shows
+   community-wide submitted and answered totals without revealing question text;
+   individual questions remain anonymous.
+
    To remove admin access, delete that user's row from `public.admin_users` in the
    Supabase SQL Editor. Do not grant admin access by putting a service-role key in
    the website.
 
    If you already ran an earlier version of the schema, run the updated
    [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor to add
-   the guide-question and public Q&A settings support and their access policies.
+   the guide-question and public Q&A settings support, dashboard stats function,
+   and their access policies.
 
 ## Deploy
 

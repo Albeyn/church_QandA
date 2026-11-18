@@ -140,3 +140,20 @@ create policy "Admins can update public Q&A settings"
       where admin_users.user_id = (select auth.uid())
     )
   );
+
+create or replace function public.get_public_question_stats()
+returns table (submitted bigint, answered bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select
+    count(*)::bigint,
+    count(*) filter (where status = 'answered')::bigint
+  from public.questions
+  where source = 'anonymous';
+$$;
+
+revoke all on function public.get_public_question_stats() from public, anon, authenticated;
+grant execute on function public.get_public_question_stats() to anon, authenticated;

@@ -1131,3 +1131,64 @@ body {
     font-size: 7px;
   }
 }
+
+.community-dashboard {
+  margin: 0 0 42px;
+}
+
+.community-stats-message {
+  margin: 0;
+  color: #a64036;
+  font-size: 11px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 11px;
+}
+
+.stat-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid #e3e8f1;
+  border-radius: 3px;
+  background: #fbfcfe;
+}
+
+.stat-label {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.stat-value {
+  color: #18366b;
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.stat-help {
+  color: #778197;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.admin-stats {
+  margin: 0 0 27px;
+}
+
+@media (max-width: 520px) {
+  .community-dashboard {
+    margin-bottom: 30px;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
