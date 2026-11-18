@@ -388,25 +388,6 @@ function renderAdmin() {
               <p id="qna-settings-message" class="admin-message" aria-live="polite"></p>
             </form>
           </section>
-          <section class="guide-question-panel" aria-labelledby="guide-question-title">
-            <p class="card-kicker">ADMIN-ADDED</p>
-            <h2 id="guide-question-title">Add a guide question</h2>
-            <p class="guide-question-help">Add a question to help guide your church Q&amp;A discussion.</p>
-            <form id="guide-question-form" class="admin-form">
-              <label for="guide-topic">Topic</label>
-              <select id="guide-topic" name="topic" required>
-                <option value="" disabled selected>Choose a topic</option>
-                <option>Faith &amp; life</option>
-                <option>The Bible</option>
-                <option>Church</option>
-                <option>Other</option>
-              </select>
-              <label for="guide-question">Guide question</label>
-              <textarea id="guide-question" name="question" minlength="8" maxlength="1000" required placeholder="Write a question to guide the discussion..."></textarea>
-              <button id="guide-submit-button" type="submit">Add guide question</button>
-              <p id="guide-question-message" class="admin-message" aria-live="polite"></p>
-            </form>
-          </section>
           <p id="admin-dashboard-message" class="admin-message" aria-live="polite"></p>
           <div id="question-list" class="question-list" aria-live="polite"></div>
         </section>
@@ -428,8 +409,6 @@ function renderAdmin() {
   const questionList = document.querySelector('#question-list');
   const qnaSettingsForm = document.querySelector('#qna-settings-form');
   const qnaSettingsMessage = document.querySelector('#qna-settings-message');
-  const guideQuestionForm = document.querySelector('#guide-question-form');
-  const guideQuestionMessage = document.querySelector('#guide-question-message');
 
   qnaSettingsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -468,44 +447,6 @@ function renderAdmin() {
     } finally {
       button.disabled = false;
       button.textContent = 'Save public details';
-    }
-  });
-
-  guideQuestionForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    guideQuestionMessage.textContent = '';
-    guideQuestionMessage.classList.remove('is-error');
-    const formData = new FormData(guideQuestionForm);
-    const question = formData.get('question').trim();
-    const topic = formData.get('topic');
-    const button = document.querySelector('#guide-submit-button');
-
-    if (question.length < 8) {
-      guideQuestionMessage.textContent = 'Please enter a question with at least 8 characters.';
-      guideQuestionMessage.classList.add('is-error');
-      return;
-    }
-
-    button.disabled = true;
-    button.textContent = 'Adding…';
-    try {
-      const { error } = await supabase.from('questions').insert({
-        question,
-        topic,
-        source: 'guide',
-      });
-      if (error) throw error;
-
-      guideQuestionForm.reset();
-      guideQuestionMessage.textContent = 'Guide question added to the inbox.';
-      await loadQuestions();
-    } catch (error) {
-      console.error('Adding guide question failed:', error);
-      guideQuestionMessage.textContent = 'Could not add the guide question. Please try again.';
-      guideQuestionMessage.classList.add('is-error');
-    } finally {
-      button.disabled = false;
-      button.textContent = 'Add guide question';
     }
   });
 
